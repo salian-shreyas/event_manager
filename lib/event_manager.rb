@@ -31,6 +31,14 @@ def save_thank_you_letter(id, personal_letter)
   end
 end
 
+# Home-phone of 10 digits is valid
+# 11 digit home-phone starting with 1 is valid
+def validate_home_phone(home_phone)
+  home_phone = home_phone.to_s
+  return home_phone.chars.last(10).join.to_i if (home_phone.length == 10) ||
+    (home_phone.length == 11 && home_phone[0] == "1")
+end
+
 puts "Event manager initialized!"
 
 contents = CSV.open(
@@ -48,9 +56,9 @@ contents.each do |row|
 
   zipcode = clean_zipcode(row[:zipcode])
 
-  legislators = legislators_by_zipcode(zipcode)
+  home_phone_= validate_home_phone(row[:homephone])
 
-  personal_letter = erb_template.result(binding)
-
-  save_thank_you_letter(id, personal_letter)
+  # legislators = legislators_by_zipcode(zipcode)
+  # personal_letter = erb_template.result(binding)
+  # save_thank_you_letter(id, personal_letter)
 end
