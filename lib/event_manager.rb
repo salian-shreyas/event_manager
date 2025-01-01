@@ -41,11 +41,11 @@ end
 
 puts "Event manager initialized!"
 
-contents = CSV.open(
+contents = CSV.foreach(
   'event_attendees.csv',
   headers: true,
   header_converters: :symbol
-)
+).map {|row| row}
 
 template_letter = File.read('form_letter.erb')
 erb_template = ERB.new(template_letter)
@@ -58,7 +58,24 @@ contents.each do |row|
 
   home_phone_= validate_home_phone(row[:homephone])
 
+  puts "#{name}, #{zipcode}, #{home_phone_}"
   # legislators = legislators_by_zipcode(zipcode)
   # personal_letter = erb_template.result(binding)
   # save_thank_you_letter(id, personal_letter)
 end
+
+reg_hours = contents.map do |row|
+  Time.strptime(row[:regdate], "%m/%d/%y %H:%M").hour
+end
+
+reg_by_hour = reg_hours.reduce(Hash.new(0)) do |reg_by_hour, hour|
+  reg_by_hour[hour] += 1
+  reg_by_hour
+end
+
+max_reg = reg_by_hour.values.max
+peak_reg_hours = reg_by_hour.reduce([]) do |peak_reg_hours, pair|
+  peak_reg_hours.push pair[0] if pair[1] == max_reg
+  peak_reg_hours
+end
+puts "Peak registration hours: #{peak_reg_hours.join(", ")}"
