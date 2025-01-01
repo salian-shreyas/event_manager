@@ -39,6 +39,41 @@ def validate_home_phone(home_phone)
     (home_phone.length == 11 && home_phone[0] == "1")
 end
 
+def reg_by_hour(contents)
+  contents.reduce(Hash.new(0)) do |reg_by_hour, row|
+    reg_hour = Time.strptime(row[:regdate], "%m/%d/%y %H:%M").hour
+    reg_by_hour[reg_hour] += 1
+    reg_by_hour
+  end
+end
+
+def peak_reg_hours(contents)
+  reg_by_hour = reg_by_hour(contents) 
+  max_reg = reg_by_hour.values.max
+  key_of_max_value(reg_by_hour, max_reg)
+end
+
+def reg_by_wday (contents)
+  contents.reduce(Hash.new(0)) do |reg_by_wday, row|
+    reg_wday = Time.strptime(row[:regdate], "%m/%d/%y %H:%M").wday
+    reg_by_wday[reg_wday] += 1
+    reg_by_wday
+  end
+end
+
+def peak_reg_wdays(contents)
+  reg_by_wday = reg_by_wday(contents)
+  max_reg = reg_by_wday.values.max
+  key_of_max_value(reg_by_wday, max_reg)
+end
+
+def key_of_max_value(hash, max_value)
+  hash.reduce([]) do |keys, pair|
+    keys.push pair[0] if pair[1] == max_value
+    keys 
+  end
+end
+
 def weekday(wday)
   {
     0 => "Sunday",
@@ -68,36 +103,16 @@ contents.each do |row|
 
   zipcode = clean_zipcode(row[:zipcode])
 
-  home_phone_= validate_home_phone(row[:homephone])
+  home_phone= validate_home_phone(row[:homephone])
 
-  puts "#{name}, #{zipcode}, #{home_phone_}"
-  # legislators = legislators_by_zipcode(zipcode)
-  # personal_letter = erb_template.result(binding)
-  # save_thank_you_letter(id, personal_letter)
+  puts "#{name}, #{zipcode}, #{home_phone}"
+  legislators = legislators_by_zipcode(zipcode)
+  personal_letter = erb_template.result(binding)
+  save_thank_you_letter(id, personal_letter)
 end
 
-reg_by_hour = contents.reduce(Hash.new(0)) do |reg_by_hour, row|
-  reg_hour = Time.strptime(row[:regdate], "%m/%d/%y %H:%M").hour
-  reg_by_hour[reg_hour] += 1
-  reg_by_hour
-end
-
-max_reg = reg_by_hour.values.max
-peak_reg_hours = reg_by_hour.reduce([]) do |peak_reg_hours, pair|
-  peak_reg_hours.push pair[0] if pair[1] == max_reg
-  peak_reg_hours
-end
+peak_reg_hours = peak_reg_hours(contents)
 puts "Peak registration hours: #{peak_reg_hours.join(", ")}"
 
-reg_by_wday = contents.reduce(Hash.new(0)) do |reg_by_wday, row|
-  reg_wday = Time.strptime(row[:regdate], "%m/%d/%y %H:%M").wday
-  reg_by_wday[reg_wday] += 1
-  reg_by_wday
-end
-
-max_wday_reg = reg_by_wday.values.max
-peak_reg_wdays = reg_by_wday.reduce([]) do |peak_reg_wdays, pair|
-  peak_reg_wdays.push pair[0] if pair[1] == max_wday_reg
-  peak_reg_wdays
-end
+peak_reg_wdays = peak_reg_wdays(contents)
 puts "Peak registration weekdays: #{peak_reg_wdays.map {|wday| weekday(wday)}.join(", ")}"
