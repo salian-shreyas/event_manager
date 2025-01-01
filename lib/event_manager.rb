@@ -39,6 +39,18 @@ def validate_home_phone(home_phone)
     (home_phone.length == 11 && home_phone[0] == "1")
 end
 
+def weekday(wday)
+  {
+    0 => "Sunday",
+    1 => "Monday",
+    2 => "Tuesday",
+    3 => "Wednesday",
+    4 => "Thursday",
+    5 => "Friday",
+    6 => "Saturday"
+  }[wday]
+end
+
 puts "Event manager initialized!"
 
 contents = CSV.foreach(
@@ -64,12 +76,9 @@ contents.each do |row|
   # save_thank_you_letter(id, personal_letter)
 end
 
-reg_hours = contents.map do |row|
-  Time.strptime(row[:regdate], "%m/%d/%y %H:%M").hour
-end
-
-reg_by_hour = reg_hours.reduce(Hash.new(0)) do |reg_by_hour, hour|
-  reg_by_hour[hour] += 1
+reg_by_hour = contents.reduce(Hash.new(0)) do |reg_by_hour, row|
+  reg_hour = Time.strptime(row[:regdate], "%m/%d/%y %H:%M").hour
+  reg_by_hour[reg_hour] += 1
   reg_by_hour
 end
 
@@ -79,3 +88,16 @@ peak_reg_hours = reg_by_hour.reduce([]) do |peak_reg_hours, pair|
   peak_reg_hours
 end
 puts "Peak registration hours: #{peak_reg_hours.join(", ")}"
+
+reg_by_wday = contents.reduce(Hash.new(0)) do |reg_by_wday, row|
+  reg_wday = Time.strptime(row[:regdate], "%m/%d/%y %H:%M").wday
+  reg_by_wday[reg_wday] += 1
+  reg_by_wday
+end
+
+max_wday_reg = reg_by_wday.values.max
+peak_reg_wdays = reg_by_wday.reduce([]) do |peak_reg_wdays, pair|
+  peak_reg_wdays.push pair[0] if pair[1] == max_wday_reg
+  peak_reg_wdays
+end
+puts "Peak registration weekdays: #{peak_reg_wdays.map {|wday| weekday(wday)}.join(", ")}"
