@@ -34,9 +34,13 @@ end
 # Home-phone of 10 digits is valid
 # 11 digit home-phone starting with 1 is valid
 def validate_home_phone(home_phone)
-  home_phone = home_phone.to_s
+  home_phone = clean_home_phone(home_phone)
   return home_phone.chars.last(10).join.to_i if (home_phone.length == 10) ||
     (home_phone.length == 11 && home_phone[0] == "1")
+end
+
+def clean_home_phone(home_phone)
+  home_phone.delete("^0-9")
 end
 
 def reg_by_hour(contents)
